@@ -1,0 +1,41 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.pytest_cache/
+.mypy_cache/
+dist/
+build/
+
+# --- Node ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# --- Editors / OS ---
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# --- Data & secrets (never commit!) ---
+*.db
+*.sqlite3
+data/
+uploads/
+*.pem
+*.key
+
+# --- Model checkpoints & caches ---
+models/
+checkpoints/
+*.onnx
+*.pt
+*.pth
+.hf_cache/
