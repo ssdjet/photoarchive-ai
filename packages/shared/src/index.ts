@@ -140,50 +140,65 @@ export interface LogRecord {
   scope: string;
   message: string;
   context?: Record<string, unknown> | null;
+  photoId?: string | null;
   createdAt: string;
 }
 
 export interface ArchiveSettings {
   archiveRoot: string;
-  dataDir: string;
   quarantineFolder: string;
   thumbnailsFolder: string;
   ocrEnabled: boolean;
   ocrLanguages: string;
   aiProvider: 'auto' | 'onnx' | 'fallback';
   directml: 'auto' | 'on' | 'off';
-  clipModelPath: string;
-  clipTextModelPath: string;
-  tokenizerPath: string;
-  textMaxTokens: number;
-  faceDetectionModelPath: string;
-  faceRecognitionModelPath: string;
-  sceneModelPath: string;
+  clipModelPath?: string | null;
+  clipTextModelPath?: string | null;
+  tokenizerPath?: string | null;
+  faceDetectionModelPath?: string | null;
+  faceRecognitionModelPath?: string | null;
+  sceneModelPath?: string | null;
   batchSize: number;
   nearDuplicateThreshold: number;
-  vectorSize: number;
+  imageExtensions: string[];
+  videoExtensions: string[];
+  updatedAt: string;
+}
+
+export interface FileOperationRequest {
+  ids: string[];
+  targetFolder?: string;
+  confirmBulk: boolean;
 }
 
 export interface FileOperationResult {
-  operation: 'delete' | 'copy' | 'move';
-  confirmed: boolean;
-  affected: number;
-  requested: number;
-  requiresConfirmation: boolean;
-  results: Array<{ photoId: string; path: string; success: boolean; error?: string | null; targetPath?: string | null }>;
+  ok: boolean;
+  processed: number;
+  failed: { id: string; error: string }[];
+  requiresConfirmation?: boolean;
+  message: string;
 }
 
-export const IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff', '.tif', '.heic', '.avif'] as const;
-export const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.avi', '.mkv', '.webm'] as const;
+export interface ApiError {
+  error: string;
+  message: string;
+  statusCode: number;
+}
+
+export const IMAGE_EXTENSIONS = [
+  '.jpg',
+  '.jpeg',
+  '.png',
+  '.webp',
+  '.tif',
+  '.tiff',
+  '.bmp',
+  '.gif',
+  '.heic',
+  '.heif',
+  '.avif'
+];
+
+export const VIDEO_EXTENSIONS = ['.mp4', '.mov', '.mkv', '.avi', '.webm'];
 
 export const BULK_OPERATION_CONFIRMATION_THRESHOLD = 10;
-
-export const STYLE_OPTIONS = [
-  { value: 'portrait', label: 'Портрет' },
-  { value: 'landscape', label: 'Пейзаж' },
-  { value: 'street', label: 'Улица' },
-  { value: 'family', label: 'Семья' },
-  { value: 'travel', label: 'Путешествия' },
-  { value: 'night', label: 'Ночь' },
-  { value: 'bw', label: 'Ч/Б' }
-] as const;
