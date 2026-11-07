@@ -1,0 +1,35 @@
+{
+  "name": "@photoarchive/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@photoarchive/shared": "*",
+    "@qdrant/js-client-rest": "^1.13.0",
+    "better-sqlite3": "^11.10.0",
+    "exifreader": "^4.54.0",
+    "fastify": "^4.29.1",
+    "heic2any": "^0.0.4",
+    "ioredis": "^6.0.0",
+    "mime-types": "^3.0.2",
+    "sharp": "^0.35.5",
+    "tesseract.js": "^7.0.0",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/mime-types": "^3.0.1",
+    "@types/node": "^20.19.43",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  }
+}
