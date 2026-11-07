@@ -1,0 +1,28 @@
+{
+  "name": "photoarchive-ai",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm run dev -w apps/api\" \"npm run dev -w apps/web\"",
+    "build": "npm run build -w packages/shared && npm run build -w apps/api && npm run build -w apps/web",
+    "check": "npm run check -w packages/shared && npm run check -w apps/api && npm run check -w apps/web",
+    "test": "npm run test -w apps/api",
+    "compose:infra": "docker compose up -d qdrant redis",
+    "compose:up": "docker compose up -d",
+    "compose:down": "docker compose down"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "concurrently": "^9.1.2",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
