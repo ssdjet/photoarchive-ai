@@ -6,11 +6,10 @@ services:
     volumes:
       - qdrant-data:/qdrant/storage
     healthcheck:
-      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/localhost/6333 && echo -e 'GET /healthz HTTP/1.1\nHost: localhost\n\n' >&3 && cat <&3 | grep -q '200 OK'"]
+      test: ["CMD", "bash", "-lc", "</dev/tcp/127.0.0.1/6333"]
       interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 10s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -21,8 +20,8 @@ services:
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
-      timeout: 5s
-      retries: 12
+      timeout: 3s
+      retries: 10
 
   api:
     build:
@@ -30,20 +29,33 @@ services:
       dockerfile: apps/api/Dockerfile
     ports:
       - "4000:4000"
-    env_file:
-      - .env
     environment:
+      NODE_ENV: production
+      PORT: 4000
+      HOST: 0.0.0.0
+      DATA_DIR: /data
+      ARCHIVE_ROOT: /archive
+      QUARANTINE_FOLDER: /data/quarantine
+      THUMBNAILS_FOLDER: /data/thumbnails
       QDRANT_URL: http://qdrant:6333
       REDIS_URL: redis://redis:6379
+      AI_PROVIDER: auto
+      DIRECTML: auto
+      OCR_ENABLED: "false"
+      LOG_LEVEL: info
     volumes:
-      - ${ARCHIVE_DIR:-./data/archive}:/data/archive
-      - api-data:/data
+      - photoarchive-data:/data
+      - ${ARCHIVE_HOST_PATH:-./data/archive}:/archive
     depends_on:
       qdrant:
         condition: service_healthy
       redis:
         condition: service_healthy
-    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:4000/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
 
   web:
     build:
@@ -54,12 +66,14 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:4000
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
     depends_on:
-      - api
-    restart: unless-stopped
+      api:
+        condition: service_healthy
 
 volumes:
   qdrant-data:
   redis-data:
-  api-data:
+  photoarchive-data:
