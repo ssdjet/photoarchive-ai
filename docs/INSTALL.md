@@ -1,65 +1,57 @@
-# Установка и запуск
+# Installation guide
 
-## Требования
+## Windows 11
 
-- Node.js 20+ и npm 10+ (для локального запуска без Docker)
-- Docker с Compose plugin (рекомендуемый способ)
-- Для GPU-ускорения на Windows: драйвер Radeon + пакет `onnxruntime-directml` (ставится локально, см. ниже)
-
-## Вариант 1. Docker Compose (рекомендуется)
-
-```bash
-git clone https://github.com/ssdjet/photoarchive-ai.git
-cd photoarchive-ai
-cp .env.example .env
-# укажите ARCHIVE_DIR — папку с фотографиями, в .env или как переменную окружения
-ARCHIVE_DIR=/path/to/photos docker compose up --build
-```
-
-Откройте http://localhost:3000 — дашборд, запуск индексации кнопкой «Запустить полную индексацию».
-
-Сервисы: Qdrant (вектора), Redis (очередь), API (порт 4000), Web (порт 3000).
-Если Qdrant/Redis недоступны, приложение автоматически использует SQLite-вектора и in-memory очередь.
-
-## Вариант 2. Локальный запуск без Docker
-
-```bash
-npm ci
-npm run build
-cp .env.example .env   # при необходимости поправьте ARCHIVE_ROOT
-npm start              # API на :4000
-# в другом терминале:
-npm run start -w apps/web   # Web на :3000
-```
-
-## Настройка AI-моделей
-
-Приложение стартует без моделей в режиме `fallback-local` (эвристические теги, поиск по метаданным).
-Для полноценной семантики:
-
-1. Скачайте ONNX-модели (CLIP image+text, face detection/recognition, scene).
-2. Укажите пути в `.env`:
-   - `CLIP_MODEL_PATH`, `CLIP_TEXT_MODEL_PATH`, `TOKENIZER_PATH` (vocab JSON для текстового энкодера)
-   - `FACE_DETECTION_MODEL_PATH`, `FACE_RECOGNITION_MODEL_PATH`, `SCENE_MODEL_PATH`
-3. Перезапустите API. Статус провайдера виден на дашборде.
-
-### DirectML (Windows, Radeon)
+1. Включите long paths:
+   - `git config --system core.longpaths true`
+   - Group Policy: Computer Configuration > Administrative Templates > System > Filesystem > Enable Win32 long paths.
+2. Установите Node.js 20+ и Docker Desktop с WSL2 backend.
+3. Клонируйте репозиторий и установите зависимости:
 
 ```powershell
-npm install onnxruntime-directml   # пакет не опубликован на npmjs — ставится из локального источника/реестра
-$env:DIRECTML="on"
+git clone https://github.com/ssdjet/photoarchive-ai.git
+cd photoarchive-ai
+npm install
+copy .env.example .env
 ```
 
-Если пакет недоступен, используется `onnxruntime-node` (CPU) — приложение остаётся полностью рабочим.
+4. В `.env` укажите папки, например:
 
-## OCR
-
-`OCR_ENABLED=true` в `.env` включает tesseract.js (языки через `OCR_LANGUAGES=rus+eng`). OCR выполняется локально.
-
-## Тесты и проверки
-
-```bash
-npm run check   # typecheck всех workspaces
-npm run test    # unit + integration (10 тестов)
-npm run build   # production-сборка
+```env
+DATA_DIR=D:\PhotoArchiveAI\data
+ARCHIVE_ROOT=D:\Photos
+QUARANTINE_FOLDER=D:\PhotoArchiveAI\quarantine
+THUMBNAILS_FOLDER=D:\PhotoArchiveAI\thumbnails
 ```
+
+5. Для Qdrant/Redis:
+
+```powershell
+npm run compose:infra
+```
+
+6. Запуск:
+
+```powershell
+npm run dev
+```
+
+## Docker
+
+```powershell
+$env:ARCHIVE_HOST_PATH='D:\Photos'
+docker compose up -d --build
+```
+
+## ONNX Runtime и DirectML
+
+- CPU fallback для тестов встроен и не требует внешних вызовов.
+- Для реальных ONNX-сессий установите `onnxruntime-node` или локальный пакет `onnxruntime-directml`.
+- DirectML-пакет в публичном npm отсутствует; приложение пробует загрузить его динамически и сообщает статус на dashboard/settings.
+- Если DirectML не найден, используется CPU/fallback режим.
+
+## Безопасность файловых операций
+
+- Все copy/move/delete проверяют, что путь остаётся внутри `ARCHIVE_ROOT`.
+- Операции с более чем 10 файлами требуют подтверждения.
+- Все операции пишутся в SQLite и отображаются в логах.
